@@ -1,0 +1,5 @@
+# Ignores all binary and compilation related files.
+build/*
+
+# Ignores all IDE related files.
+*.kdev4
