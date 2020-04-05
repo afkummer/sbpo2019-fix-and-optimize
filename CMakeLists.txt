@@ -11,7 +11,7 @@ add_definitions(-Wall -Wextra -Wfloat-conversion -std=c++17 -pipe -march=x86-64 
 # To set the build mode, specify the value of var `CMAKE_BUILD_TYPE` when
 # running CMake.
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -g")
 
 # Fallback to Debug build type automatically
 # if no compilation mode was specified.
@@ -34,8 +34,10 @@ include_directories(src)
 
 
 add_executable(fixAndOptimize
-   src/mainFeo.cpp
+   src/InitialRouting.cpp
    src/Instance.cpp
+   src/mainFeo.cpp
    src/MipModel.cpp
+   src/SolutionCopy.cpp
 )
 target_link_libraries(fixAndOptimize ${CPLEX_LIBRARIES})

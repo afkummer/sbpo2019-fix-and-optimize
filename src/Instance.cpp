@@ -119,7 +119,7 @@ Instance::Instance(const char* fname) {
    // Detect service type of double service nodes.
    for (int i: dscheck) {
       int sksum = std::accumulate(m_nodeReqSkills[i].begin(), m_nodeReqSkills[i].end(), 0);
-      int dmin = std::get<0>(m_nodeDelta[i]);
+      double dmin = std::get<0>(m_nodeDelta[i]);
 
       if (sksum == 2) {
          if (dmin <= 0.001) {

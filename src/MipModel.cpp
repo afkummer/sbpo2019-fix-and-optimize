@@ -1,9 +1,7 @@
 #include "MipModel.h"
 
-#include <random>
-#include <cassert>
-#include <algorithm>
-#include <numeric>
+#include <iostream>
+
 
 using namespace std;
 
@@ -13,16 +11,16 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
    m_cplex = IloCplex(m_model);
    m_model.setName("routing_cost");
 
-   // Helper objects
+   // Helper objects.
    IloExpr expr(m_env);
-   char buf[128];
+   char buf[128] = "";
 
    // Maximum tardiness variable.
    m_Tmax = IloNumVar(m_env, 0., IloInfinity, IloNumVar::Float, "tmax");
 
    double bigM = 1e6;
 
-   // Create decision variables x
+   // Create decision variables x.
    m_x = Var4D(m_env, m_inst.numNodes() - 1);
    for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
       m_x[i] = Var3D(m_env, m_inst.numNodes() - 1);
@@ -60,7 +58,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       }
    }
 
-   // Create aux variables z
+   // Create aux variables z.
    m_z = Var2D(m_env, m_inst.numNodes() - 2);
    for (int i = 1; i < m_inst.numNodes() - 1; ++i) {
       m_z[i-1] = Var1D(m_env, m_inst.numSkills());
@@ -77,7 +75,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       }
    }
 
-   // Create aux variables t
+   // Create aux variables t.
    m_t = Var3D(m_env, m_inst.numNodes() - 1);
    for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
       m_t[i] = Var2D(m_env, m_inst.numVehicles());
@@ -102,13 +100,13 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       }
    }
 
-   // Create (1) objective function
+   // Create (1) objective function.
    expr += L3 * m_Tmax;
    m_obj = IloObjective(m_env, expr, IloObjective::Minimize, "routingCost");
    m_model.add(m_obj);
    expr.clear();
 
-   // Create (4) greatest tardiness constraints
+   // Create (4) greatest tardiness constraints.
    for (int i = 1; i < m_inst.numNodes() - 1; ++i) {
       for (int s = 0; s < m_inst.numSkills(); ++s) {
 
@@ -122,7 +120,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       }
    }
 
-   // Create (5-1) flow on source node
+   // Create (5-1) flow on source node.
    for (int v = 0; v < m_inst.numVehicles(); ++v) {
       for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
          for (int s = 0; s < m_inst.numSkills(); ++s) {
@@ -137,7 +135,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       expr.clear();
    }
 
-   // Create (5-2) flow on sink node
+   // Create (5-2) flow on sink node.
    for (int v = 0; v < m_inst.numVehicles(); ++v) {
       for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
          for (int s = 0; s < m_inst.numSkills(); ++s) {
@@ -152,7 +150,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       expr.clear();
    }
 
-   // Create (6) flow conservation constraints
+   // Create (6) flow conservation constraints.
    for (int i = 1; i < m_inst.numNodes() - 1; ++i) {
       for (int v = 0; v < m_inst.numVehicles(); ++v) {
          for (int j = 0; j < m_inst.numNodes() - 1; ++j) {
@@ -171,7 +169,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       }
    }
 
-   // Create (7) assignment constraints
+   // Create (7) assignment constraints.
    for (int i = 1; i < m_inst.numNodes() - 1; ++i) {
       for (int s = 0; s < m_inst.numSkills(); ++s) {
 
@@ -193,7 +191,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       }
    }
 
-   // Create (8) subcycle elimination constraints
+   // Create (8) subcycle elimination constraints.
    for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
       for (int j = 1; j < m_inst.numNodes() - 1; ++j) {
          for (int v = 0; v < m_inst.numVehicles(); ++v) {
@@ -225,8 +223,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
       }
    }
 
-
-   // Create (10) end time window constraints
+   // Create (10) end time window constraints.
    for (int i = 1; i < m_inst.numNodes() - 1; ++i) {
       for (int v = 0; v < m_inst.numVehicles(); ++v) {
          for (int s = 0; s < m_inst.numSkills(); ++s) {
@@ -330,7 +327,7 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
    cout << "I had to create " << bcount << " (13)-constraints.\n";
    #endif
 
-   // Release helper objects
+   // Release helper objects.
    expr.end();
 }
 
@@ -340,4 +337,56 @@ MipModel::~MipModel() {
 
 void MipModel::writeLp(const char *fname) {
    m_cplex.exportModel(fname);
+}
+
+void MipModel::writeSolution(const char* fname) {
+   m_cplex.writeSolution(fname);
+}
+
+void MipModel::maxThreads(int value) {
+   m_cplex.setParam(IloCplex::IntParam::Threads, value);
+}
+
+void MipModel::timeLimit(int maxSeconds) {
+   m_cplex.setParam(IloCplex::NumParam::TiLim, maxSeconds);
+}
+
+void MipModel::setVarX(int i, int j, int v, int s, double lb, double ub) {
+   assert(m_x[i][j][v][s].getImpl() && "Trying to set bounds of unexisting variable.");
+   m_x[i][j][v][s].setBounds(lb, ub);
+}
+
+void MipModel::unfixSolution() {
+   for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
+      for (int j = 0; j < m_inst.numNodes() - 1; ++j) {
+         for (int v = 0; v < m_inst.numVehicles(); ++v) {
+            for (int s = 0; s < m_inst.numSkills(); ++s) {
+               if (m_x[i][j][v][s].getImpl()) {
+                  m_x[i][j][v][s].setBounds(0.0, 1.0);
+               }
+            }
+         }
+      }
+   }
+}
+
+
+double MipModel::solve() {
+   if (!m_cplex.solve()) {
+      cout << "MipModel::solve(): Problem become infeasible." << endl;
+      exit(EXIT_FAILURE);
+   }
+   return m_cplex.getObjValue();
+}
+
+double MipModel::objValue() const {
+   return m_cplex.getObjValue();
+}
+
+double MipModel::relativeGap() const {
+   m_cplex.getMIPRelativeGap();
+}
+
+double MipModel::objLb() const {
+   return m_cplex.getBestObjValue();
 }
