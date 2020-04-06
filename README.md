@@ -1,6 +1,7 @@
 ## A Fix-and-Optimize matheuristic applied to the Home Health Care Routing and Scheduling Problem
 
 This repository contains the code of the genetic algorithm presented in [SBPO 2019](sbpo2019.galoa.com.br/).
+A revised copy of the paper is available [here](neto2019-sbpo.pdf).
 
 ## Building the project
 
