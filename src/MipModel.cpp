@@ -1,3 +1,30 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019
+ * Alberto Francisco Kummer Neto (afkneto@inf.ufrgs.br),
+ * Luciana Salete Buriol (buriol@inf.ufrgs.br) and
+ * Olinto César Bassi de Araújo (olinto@ctism.ufsm.br)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 #include "MipModel.h"
 
 #include <iostream>
@@ -20,6 +47,9 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
 
    double bigM = 1e6;
 
+   m_xSeq = IloNumVarArray(m_env);
+   m_solXSeq = IloNumArray(m_env);
+
    // Create decision variables x.
    m_x = Var4D(m_env, m_inst.numNodes() - 1);
    for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
@@ -34,22 +64,23 @@ MipModel::MipModel(const Instance &inst): m_inst(inst) {
             for (int s = 0; s < m_inst.numSkills(); ++s) {
 
                // Does not create unnecessary variables.
-               if (i == j)
+               // Remove all variables which represent unfeasible assignment of
+               // tasks, but keep all arcs departing from /arriving to the depot.
+               if (i == j && j != 0)
                   continue;
-               if (m_inst.vehicleHasSkill(v, s) == 0) {
-                  continue;
-               }
+
                if (j != 0) {
                   if (m_inst.nodeReqSkill(j, s) == 0) {
                      continue;
                   }
-               } else {
-                  if (m_inst.nodeReqSkill(i, s) == 0)
+                  if (m_inst.vehicleHasSkill(v, s) == 0) {
                      continue;
+                  }
                }
 
                snprintf(buf, sizeof buf, "x(%d,%d,%d,%d)", i, j, v, s);
                m_x[i][j][v][s] = IloNumVar(m_env, 0.0, 1.0, IloNumVar::Bool, buf);
+               m_xSeq.add(m_x[i][j][v][s]);
 
                // Embeds Constraints (2).
                expr += L1 * m_inst.distance(i, j) * m_x[i][j][v][s];
@@ -335,6 +366,18 @@ MipModel::~MipModel() {
    m_env.end();
 }
 
+const Instance & MipModel::instance() const {
+   return m_inst;
+}
+
+void MipModel::setQuiet(bool toggle) {
+   if (toggle) {
+      m_cplex.setOut(m_env.getNullStream());
+   } else {
+      m_cplex.setOut(m_env.out());
+   }
+}
+
 void MipModel::writeLp(const char *fname) {
    m_cplex.exportModel(fname);
 }
@@ -356,6 +399,13 @@ void MipModel::setVarX(int i, int j, int v, int s, double lb, double ub) {
    m_x[i][j][v][s].setBounds(lb, ub);
 }
 
+void MipModel::fixCurrentSolution() {
+   m_cplex.getValues(m_solXSeq, m_xSeq);
+   for (IloInt i = 0; i < m_xSeq.getSize(); ++i) {
+      m_xSeq[i].setBounds(m_solXSeq[i], m_solXSeq[i]);
+   }
+}
+
 void MipModel::unfixSolution() {
    for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
       for (int j = 0; j < m_inst.numNodes() - 1; ++j) {
@@ -370,6 +420,20 @@ void MipModel::unfixSolution() {
    }
 }
 
+int MipModel::unfixVehicleSolution(int v) {
+   int xcount = 0;
+   for (int i = 0; i < m_inst.numNodes() - 1; ++i) {
+      for (int j = 0; j < m_inst.numNodes() - 1; ++j) {
+         for (int s = 0; s < m_inst.numSkills(); ++s) {
+            if (m_x[i][j][v][s].getImpl()) {
+               m_x[i][j][v][s].setBounds(0.0, 1.0);
+               ++xcount;
+            }
+         }
+      }
+   }
+   return xcount;
+}
 
 double MipModel::solve() {
    if (!m_cplex.solve()) {
@@ -384,9 +448,18 @@ double MipModel::objValue() const {
 }
 
 double MipModel::relativeGap() const {
-   m_cplex.getMIPRelativeGap();
+   return m_cplex.getMIPRelativeGap();
 }
 
 double MipModel::objLb() const {
    return m_cplex.getBestObjValue();
+}
+
+double MipModel::serviceStartTime(int i, int v, int s) const {
+   for (int j = 0; j < m_inst.numNodes()-1; ++j) {
+      if (m_x[j][i][v][s].getImpl() && m_cplex.getValue(m_x[j][i][v][s]) >= 0.8) {
+         return m_cplex.getValue(m_t[i][v][s]);
+      }
+   }
+   return numeric_limits<double>::infinity();
 }

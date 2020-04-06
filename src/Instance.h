@@ -1,25 +1,44 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019
+ * Alberto Francisco Kummer Neto (afkneto@inf.ufrgs.br),
+ * Luciana Salete Buriol (buriol@inf.ufrgs.br) and
+ * Olinto César Bassi de Araújo (olinto@ctism.ufsm.br)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 #pragma once
 
 #include <iosfwd>
 #include <vector>
 #include <tuple>
 
-/**
- * @brief Implentation of a instance to HHC problem.
- *
- * Conventions:
- * <ul>
- *    <li> Node 0 means depot source </li>
- *    <li> Last node meand depot sink </li>
- * </ul>
- */
 class Instance {
 public:
    enum SvcType {
       NONE   = -1,
       SINGLE = 0,
       PRED   = 1,
-      SIM = 2
+      SIM = 2,
+      MAX_
    };
 
    Instance(const char *fname);
@@ -46,10 +65,6 @@ public:
    double nodePosY(int node) const;
 
    double distance(int fromNode, int toNode) const;
-   
-   int personnelSize() const;
-   int personnelSkill(int p, int s) const;
-   int personnelDefaultVehicle(int p) const;
 
    const std::string &fileName() const;
 
@@ -78,12 +93,4 @@ private:
    std::vector <std::tuple<double, double>> m_nodePos;
 
    std::vector <std::vector <double>> m_distances;
-
-   // Team designation generated data.
-   std::vector <std::vector<int>> m_pSkill;
-   std::vector <int> m_originalV;
-
 };
-
-std::vector<std::vector<std::tuple<int,int>>> readSimpleSolution(const std::string &fname);
-void writeSimpleSolution(const std::vector<std::vector<std::tuple<int,int>>> &routes, const std::string &fname);

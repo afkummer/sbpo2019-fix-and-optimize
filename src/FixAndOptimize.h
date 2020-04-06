@@ -27,25 +27,34 @@
 
 #pragma once
 
-#include <chrono>
+#include "MipModel.h"
 
-class Timer {
+#include <random>
+
+class FixAndOptimize {
 public:
 
-   inline void start() {
-      m_t0 = std::chrono::high_resolution_clock::now();
-   }
+   enum class DecompMethod: int {
+      RANDOM = 0,
+      GUIDED = 1,
+      MAX_ = 2
+   };
 
-   inline void finish() {
-      m_t1 = std::chrono::high_resolution_clock::now();
-   }
+   FixAndOptimize(MipModel &model);
+   virtual ~FixAndOptimize();
 
-   inline double elapsed() const {
-      auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(m_t1-m_t0).count();
-      return ms/1000.0;
-   }
+   void solve(const int seed, const int maxIterNoImpr, const int maxIterSeconds);
 
 private:
-   std::chrono::high_resolution_clock::time_point m_t0, m_t1;
-};
+   const Instance &m_inst;
+   MipModel &m_model;
 
+   std::mt19937_64 m_prng;
+
+   DecompMethod m_currentDecomp;
+   std::string m_currentDecompName;
+   int m_vehiDecomp[2];
+
+   void chooseDecomp();
+   void selectDecompVehicles();
+};

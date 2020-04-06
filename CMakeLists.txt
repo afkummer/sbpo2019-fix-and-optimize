@@ -34,6 +34,7 @@ include_directories(src)
 
 
 add_executable(fixAndOptimize
+   src/FixAndOptimize.cpp
    src/InitialRouting.cpp
    src/Instance.cpp
    src/mainFeo.cpp
