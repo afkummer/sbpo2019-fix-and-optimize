@@ -15,7 +15,42 @@ check your distro documentation.
 
 To build the project, browse to the `build` directory and issue the command `CXX=clang++-8 cmake .. -DCPLEX_ROOT_DIR=$CPX` to generate the makefile. Then, simply run `make`. By default, CMake is set to generate a debug-friendly binary, with all code optimizations disabled and all symbols embedded. To change this behavior, run `CXX=clang++-8 cmake .. -DCPLEX_ROOT_DIR=$CPX -DCMAKE_BUILD_TYPE=Release` to enable the `-O3` optimization flag.
 
-__Note:__ You need to specify the path to the `IBM ILOG CPLEX Studio` by replacing the value of `$CPX`.
+__Note:__ You need to specify the path to the `IBM ILOG CPLEX Studio` by replacing the value of `$CPX`. Supposing a standard installation of CPLEX on a Ubuntu 18.04 system and `clang 9`, the entire configuration and build of the project holds the following output.
+
+```bash
+$ CXX=clang++-9 cmake -DCPLEX_ROOT_DIR=/opt/ibm/ILOG/CPLEX_Studio128/ ..
+-- The C compiler identification is Clang 9.0.0
+-- The CXX compiler identification is Clang 9.0.0
+-- Check for working C compiler: /usr/bin/clang-9
+-- Check for working C compiler: /usr/bin/clang-9 -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/clang++-9
+-- Check for working CXX compiler: /usr/bin/clang++-9 -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Using compilation flags of mode "Debug"
+-- Using CPLEX_ROOT_DIR = "/opt/ibm/ILOG/CPLEX_Studio128/"
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/alberto/work/sbpo2019-fix-and-optimize/build
+
+$ make
+Scanning dependencies of target fixAndOptimize
+[ 14%] Building CXX object CMakeFiles/fixAndOptimize.dir/src/SolutionCopy.cpp.o
+[ 42%] Building CXX object CMakeFiles/fixAndOptimize.dir/src/Instance.cpp.o
+[ 42%] Building CXX object CMakeFiles/fixAndOptimize.dir/src/FixAndOptimize.cpp.o
+[ 57%] Building CXX object CMakeFiles/fixAndOptimize.dir/src/mainFeo.cpp.o
+[ 71%] Building CXX object CMakeFiles/fixAndOptimize.dir/src/InitialRouting.cpp.o
+[ 85%] Building CXX object CMakeFiles/fixAndOptimize.dir/src/MipModel.cpp.o
+[100%] Linking CXX executable fixAndOptimize
+[100%] Built target fixAndOptimize
+
+```
 
 ## Running the genetic algorithm
 
