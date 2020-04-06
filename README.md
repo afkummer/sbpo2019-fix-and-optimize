@@ -13,7 +13,7 @@ On a updated Debian/Ubuntu/Linux Mint installation, you can install those depend
 by running `sudo apt install clang++-8 cmake libomp-8-dev`. To other versions of `clang`,
 check your distro documentation.
 
-To build the project, browse to the `build` directory and issue the command `CXX=clang++-8 cmake .. -DCPLEX_ROOT_DIR=$CPX` to generate the makefile. Then, simply run `make`. By default, CMake is set to generate a debug-friendly binary, with all code optimizations disabled and all symbols embedded. To change this behavior, run `CXX=clang++-8 cmake .. -DCMAKE_BUILD_TYPE=Release` to enable the `-O3` optimization flag.
+To build the project, browse to the `build` directory and issue the command `CXX=clang++-8 cmake .. -DCPLEX_ROOT_DIR=$CPX` to generate the makefile. Then, simply run `make`. By default, CMake is set to generate a debug-friendly binary, with all code optimizations disabled and all symbols embedded. To change this behavior, run `CXX=clang++-8 cmake .. -DCPLEX_ROOT_DIR=$CPX -DCMAKE_BUILD_TYPE=Release` to enable the `-O3` optimization flag.
 
 __Note:__ You need to specify the path to the `IBM ILOG CPLEX Studio` by replacing the value of `$CPX`.
 
