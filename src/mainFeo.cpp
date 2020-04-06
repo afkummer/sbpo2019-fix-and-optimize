@@ -81,8 +81,8 @@ int main(int argc, char **argv) {
    unique_ptr <FixAndOptimize> feoSolver(new FixAndOptimize(*model));
    feoSolver->solve(seed, (inst->numNodes()-2)/2, 25);
 
-   cout << "Best solution found: " << model->objValue() << endl;
-   cout << "\n\n" << model->objValue() << endl;
+   cout << "\nBest solution found: " << model->objValue() << endl;
+   cout << "\n" << model->objValue() << endl;
 
    return EXIT_SUCCESS;
 }

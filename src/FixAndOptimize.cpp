@@ -49,6 +49,7 @@ void FixAndOptimize::solve(const int seed, const int maxIterNoImpr, const int ma
 
    Timer timer;
    timer.start();
+   double timeBest = 0.0;
 
    m_model.timeLimit(maxIterSeconds);
    int itersWoImpr = 0;
@@ -72,6 +73,7 @@ void FixAndOptimize::solve(const int seed, const int maxIterNoImpr, const int ma
 
       if (currentObj - newObj > 0.5) {
          itersWoImpr = 0;
+         timeBest = timer.elapsed();
       } else {
          ++itersWoImpr;
          if (itersWoImpr >= maxIterNoImpr) {
@@ -82,8 +84,32 @@ void FixAndOptimize::solve(const int seed, const int maxIterNoImpr, const int ma
       currentObj = newObj;
    }
 
+   timer.finish();
+
    m_model.fixCurrentSolution();
    m_model.solve();
+
+   // Registers the solution into a CSV file.
+   ofstream csv("results-fixAndOptimize.csv", ios::out | ios::app);
+
+   // Write the header if the file is created in this run.
+   if (csv.tellp() == 0) {
+      csv <<
+         "instance," <<
+         "seed," <<
+         "time.best," <<
+         "time.total," <<
+         "cost" <<
+      endl;
+   }
+
+   csv <<
+      m_inst.fileName() << "," <<
+      seed << "," <<
+      timeBest << "," <<
+      timer.elapsed() << "," <<
+      m_model.objValue() <<
+   endl;
 }
 
 void FixAndOptimize::chooseDecomp() {
