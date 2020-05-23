@@ -1,25 +1,26 @@
-## A Fix-and-Optimize matheuristic applied to the Home Health Care Routing and Scheduling Problem
+# A Fix-and-Optimize matheuristic applied to the Home Health Care Routing and Scheduling Problem
 
-This repository contains the code of the genetic algorithm presented in [SBPO 2019](sbpo2019.galoa.com.br/).
-A revised copy of the paper is available [here](neto2019-sbpo.pdf).
+This repository contains the code of the _fix and optimize matheuristic_ presented in [SBPO 2019](sbpo2019.galoa.com.br/). A revised copy of the paper is available [here](neto2019-sbpo.pdf).
 
 ## Building the project
 
 To be able to compile the code, you need:
-- A C++17 compiler (clang >= 6.0 should be fine)
+- A C++14 compiler (clang >= 6 or g++ >= 7 should be fine)
 - CMake build system
-- CPLEX MIP solver (>=12.8.0 should be fine)
+- CPLEX MIP solver (>= 12.8.0 should be fine)
 
-On a updated Debian/Ubuntu/Linux Mint installation, you can install those dependencies
-by running `sudo apt install clang++-8 cmake libomp-8-dev`. To other versions of `clang`,
-check your distro documentation.
+To build the project, you first need to use the `cmake` utility to generate the makefile.
 
-To build the project, browse to the `build` directory and issue the command `CXX=clang++-8 cmake .. -DCPLEX_ROOT_DIR=$CPX` to generate the makefile. Then, simply run `make`. By default, CMake is set to generate a debug-friendly binary, with all code optimizations disabled and all symbols embedded. To change this behavior, run `CXX=clang++-8 cmake .. -DCPLEX_ROOT_DIR=$CPX -DCMAKE_BUILD_TYPE=Release` to enable the `-O3` optimization flag.
+1. Browse to the `build` directory and issue the command `cmake .. -DCPLEX_ROOT_DIR=$CPX` to generate the makefile. Replace the `$CPX` to the path were the CPLEX solver is installed. This directory must contains the `cplex` and `concert` directories.
 
-__Note:__ You need to specify the path to the `IBM ILOG CPLEX Studio` by replacing the value of `$CPX`. Supposing a standard installation of CPLEX on a Ubuntu 18.04 system and `clang 9`, the entire configuration and build of the project holds the following output.
+2. Run `make` to build the binaries. The main executable is called `fixAndOptimize`.
+
+__Note:__ By default, `cmake` sets compiler flags to generate a debug-friendly binary. To change this behavior, run `cmake` of step (1) with the additional argument `-DCMAKE_BUILD_TYPE=Release`. You can check the current compilation mode following the output line "Using compilation flags of mode" from `cmake`.
+
+The example below shows the expected output by following the build steps. This example was run on Ubuntu 18.04 by using the clang 9 compiler and CPLEX 12.8.0.
 
 ```bash
-$ CXX=clang++-9 cmake -DCPLEX_ROOT_DIR=/opt/ibm/ILOG/CPLEX_Studio128/ ..
+$ cmake .. -DCPLEX_ROOT_DIR=/opt/ibm/ILOG/CPLEX_Studio128/
 -- The C compiler identification is Clang 9.0.0
 -- The CXX compiler identification is Clang 9.0.0
 -- Check for working C compiler: /usr/bin/clang-9
@@ -53,9 +54,9 @@ Scanning dependencies of target fixAndOptimize
 
 ```
 
-## Running the genetic algorithm
+## Running the _matheuristic_
 
-Once compiled, you should be ready to use this implementation of the F&O matheuristic. If you execute the binary `fixAndOptimize` without any arguments, it will present you the command line usage.
+Once compiled, you should be ready to use this implementation of the _matheuristic_. If you execute the binary `fixAndOptimize` without any arguments, it will present you the command line usage.
 
 ```bash
 $ ./fixAndOptimize
@@ -65,12 +66,13 @@ Usage: ./fixAndOptimize <1:instance path> <2: PRNG seed>
 Following the list of parameters, you need to specify:
 
 - `<1: instance path>` The path to the instance file to be solved
-- `<2: seed>` The seed to be set into the Pseudo-RNG
+- `<2: seed>` The seed to be set into the Pseudo Random Number Generator
 
-An example of usage is the following.
+The example below shows the output of the _matheuristic_ to the instance [B6](instances-HHCRSP/InstanzCPLEX_HCSRP_25_6.txt) with the seed `1`.
 
 ```bash
 $ ./fixAndOptimize ../instances-HHCRSP/InstanzCPLEX_HCSRP_25_6.txt 1
+
 === Fix-and-Optimize solver for HHCRSP ===
 Instance: ../instances-HHCRSP/InstanzCPLEX_HCSRP_25_6.txt
 PRGN seed: 1
@@ -129,3 +131,9 @@ Best solution found: 467.3
 
 467.3
 ```
+
+## Instance dataset from [Mankowska et al. (2014)](https://link.springer.com/article/10.1007/s10729-013-9243-1)
+
+The instance files from the directory [instances-HHCRSP](instances-HHCRSP) were proposed by [Mankowska et al. (2014)](https://link.springer.com/article/10.1007/s10729-013-9243-1).
+
+This directory contains a mirror of all data from the [original dataset](http://prodlog.wiwi.uni-halle.de/forschung/research_data/hhcrsp/), with a small change in the instance format to ease the reading by the C++ code.
