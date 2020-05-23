@@ -11,7 +11,7 @@ To be able to compile the code, you need:
 
 To build the project, you first need to use the `cmake` utility to generate the makefile.
 
-1. Browse to the `build` directory and issue the command `cmake .. -DCPLEX_ROOT_DIR=$CPX` to generate the makefile. Replace the `$CPX` to the path were the CPLEX solver is installed. This directory must contains the `cplex` and `concert` directories.
+1. Browse to the `build` directory and issue the command `cmake .. -DCPLEX_ROOT_DIR=$CPX` to generate the makefile. Replace the `$CPX` with the path were the CPLEX solver is installed. This directory must contains the `cplex` and `concert` directories.
 
 2. Run `make` to build the binaries. The main executable is called `fixAndOptimize`.
 
