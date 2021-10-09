@@ -29,13 +29,23 @@ cmake_minimum_required(VERSION 3.6)
 #
 project(hhcrsp-feo)
 
-add_definitions(-Wall -Wextra -Wfloat-conversion -std=c++14 -pipe -march=x86-64 -mtune=generic)
+add_definitions(
+   -Wall 
+   -Wextra 
+   -Wfloat-conversion 
+   -std=c++17 
+   -pipe 
+   -march=native
+   -mtune=native
+   -flto 
+   -fopenmp
+)
 
 # Debug and Release definitions.
 # To set the build mode, specify the value of var `CMAKE_BUILD_TYPE` when
 # running CMake.
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -s")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -fno-omit-frame-pointer")
 
 # Fallback to Debug build type automatically
 # if no compilation mode was specified.
@@ -63,6 +73,6 @@ add_executable(fixAndOptimize
    src/Instance.cpp
    src/mainFeo.cpp
    src/MipModel.cpp
-   src/SolutionCopy.cpp
 )
 target_link_libraries(fixAndOptimize ${CPLEX_LIBRARIES})
+

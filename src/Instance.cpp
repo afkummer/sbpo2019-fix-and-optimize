@@ -1,30 +1,3 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019
- * Alberto Francisco Kummer Neto (afkneto@inf.ufrgs.br),
- * Luciana Salete Buriol (buriol@inf.ufrgs.br) and
- * Olinto César Bassi de Araújo (olinto@ctism.ufsm.br)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
-
 #include "Instance.h"
 #include <limits>
 #include <iostream>
@@ -146,7 +119,7 @@ Instance::Instance(const char* fname) {
    // Detect service type of double service nodes.
    for (int i: dscheck) {
       int sksum = std::accumulate(m_nodeReqSkills[i].begin(), m_nodeReqSkills[i].end(), 0);
-      double dmin = std::get<0>(m_nodeDelta[i]);
+      int dmin = std::get<0>(m_nodeDelta[i]);
 
       if (sksum == 2) {
          if (dmin <= 0.001) {
@@ -161,6 +134,20 @@ Instance::Instance(const char* fname) {
       }
    }
 
+   // Create the skill caches.
+   m_vehiSkillCache.resize(numVehicles());
+   m_nodeSkillCache.resize(numNodes()-1);
+
+   for (int s = 0; s < numSkills(); ++s) {
+      for (int v = 0; v < numVehicles(); ++v) {
+         if (vehicleHasSkill(v, s))
+            m_vehiSkillCache[v].push_back(s);
+      }
+      for (int n = 0; n < numNodes()-1; ++n) {
+         if (nodeReqSkill(n, s))
+            m_nodeSkillCache[n].push_back(s);
+      }
+   }
 }
 
 Instance::~Instance() {
@@ -183,8 +170,16 @@ bool Instance::vehicleHasSkill(int vehicle, int skill) const {
    return m_vehicleSkills[vehicle][skill];
 }
 
+const std::vector<int> Instance::vehicleSkills(int vehicle) const {
+   return m_vehiSkillCache[vehicle];
+}
+
 bool Instance::nodeReqSkill(int node, int skill) const {
    return m_nodeReqSkills[node][skill];
+}
+
+const std::vector<int> Instance::nodeSkills(int node) const {
+   return m_nodeSkillCache[node];
 }
 
 Instance::SvcType Instance::nodeSvcType(int node) const {
@@ -364,4 +359,39 @@ std::ostream &operator<<(std::ostream &out, const Instance &inst) {
    }
 
    return out;
+}
+
+std::vector<std::vector<std::tuple<int,int>>> readSimpleSolution(const std::string &fname) {
+   std::ifstream fid(fname);
+   if (!fid) {
+      cerr << "File '" << fname << "' could not be open in read mode.\n";
+      abort();
+   }
+   std::vector<std::vector<std::tuple<int,int>>> routes;
+   int size;
+   fid >> size;
+   routes.resize(size);
+   for (auto &r: routes) {
+      fid >> size;
+      r.resize(size);
+      for (auto &i: r) {
+         fid >> get<0>(i) >> get<1>(i);
+      }
+   }
+   return routes;
+}
+
+void writeSimpleSolution(const std::vector<std::vector<std::tuple<int,int>>> &routes, const std::string &fname) {
+   std::ofstream fid(fname);
+   if (!fid) {
+      cerr << "File '" << fname << "' could not be open in write mode.\n";
+      abort();
+   }
+   fid << routes.size() << endl;
+   for (auto &r: routes) {
+      fid << r.size() << endl;
+      for (auto &i: r) {
+         fid << get<0>(i) << ' ' << get<1>(i) << endl;
+      }
+   }
 }
